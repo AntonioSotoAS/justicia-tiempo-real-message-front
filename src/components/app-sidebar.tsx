@@ -4,7 +4,6 @@ import * as React from "react"
 import {
   BarChart3,
   Command,
-  LogOut,
   LayoutDashboard,
 } from "lucide-react"
 
@@ -23,7 +22,7 @@ import {
 } from "@/components/ui/sidebar"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const data = {
     user: {

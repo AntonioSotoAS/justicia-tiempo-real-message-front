@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { EstadisticasTable } from '@/components/estadisticas-table';
 import { estadisticaJuecesApi, CuadroAnualDto, FilaDto } from '@/lib/api/estadisticaJuecesApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { EnviarMensajeDialog } from '@/components/enviar-mensaje-dialog';
 
 export default function EstadisticasPage() {
   const [cuadroAnual, setCuadroAnual] = useState<CuadroAnualDto | null>(null);
@@ -15,6 +15,8 @@ export default function EstadisticasPage() {
   const [anio, setAnio] = useState(new Date().getFullYear());
   const [mes, setMes] = useState(new Date().getMonth() + 1);
   const [filtroJuez, setFiltroJuez] = useState('');
+  const [juecesSeleccionados, setJuecesSeleccionados] = useState<Set<string>>(new Set());
+  const [ordenarSeleccionadosPrimero, setOrdenarSeleccionadosPrimero] = useState(false);
   const [estadisticas, setEstadisticas] = useState({
     totalFilas: 0,
     totalResoluciones: 0,
@@ -24,6 +26,7 @@ export default function EstadisticasPage() {
     filasBueno: 0,
     filasRegular: 0
   });
+  const [mensajesEnviados, setMensajesEnviados] = useState(0);
 
   const cargarDatos = useCallback(async () => {
     setIsLoading(true);
@@ -175,6 +178,129 @@ export default function EstadisticasPage() {
     setFiltroJuez('');
   };
 
+  // Función para generar un ID único para cada juez
+  const generarIdJuez = (filaIndex: number, juezIndex: number) => {
+    return `${filaIndex}-${juezIndex}`;
+  };
+
+  // Función para verificar si un juez específico tiene mensaje
+  const juezTieneMensaje = (juez: any) => {
+    return juez.l_mensaje === true;
+  };
+
+  // Funciones para manejar selección de jueces individuales
+  const toggleSeleccionJuez = (filaIndex: number, juezIndex: number) => {
+    const fila = filasFiltradas[filaIndex];
+    const juez = fila.jueces_objetos?.[juezIndex];
+    
+    if (!juez || !juezTieneMensaje(juez)) {
+      return; // No permitir selección si el juez no tiene mensaje
+    }
+    
+    const juezId = generarIdJuez(filaIndex, juezIndex);
+    setJuecesSeleccionados(prev => {
+      const nuevo = new Set(prev);
+      if (nuevo.has(juezId)) {
+        nuevo.delete(juezId);
+      } else {
+        nuevo.add(juezId);
+      }
+      return nuevo;
+    });
+  };
+
+  const seleccionarTodos = () => {
+    const nuevosJuecesSeleccionados = new Set<string>();
+    
+    filasFiltradas.forEach((fila, filaIndex) => {
+      if (fila.jueces_objetos && fila.jueces_objetos.length > 0) {
+        fila.jueces_objetos.forEach((juez, juezIndex) => {
+          if (juezTieneMensaje(juez)) {
+            const juezId = generarIdJuez(filaIndex, juezIndex);
+            nuevosJuecesSeleccionados.add(juezId);
+          }
+        });
+      }
+    });
+    
+    setJuecesSeleccionados(nuevosJuecesSeleccionados);
+  };
+
+  const deseleccionarTodos = () => {
+    setJuecesSeleccionados(new Set());
+  };
+
+  const handleEnviarMensaje = (datos: {
+    encuesta: string;
+    telefono: string;
+    whatsapp: string;
+  }) => {
+    const juecesSeleccionadosData: any[] = [];
+    
+    filasFiltradas.forEach((fila, filaIndex) => {
+      if (fila.jueces_objetos && fila.jueces_objetos.length > 0) {
+        fila.jueces_objetos.forEach((juez, juezIndex) => {
+          const juezId = generarIdJuez(filaIndex, juezIndex);
+          if (juecesSeleccionados.has(juezId)) {
+            juecesSeleccionadosData.push({
+              fila,
+              juez,
+              filaIndex,
+              juezIndex
+            });
+          }
+        });
+      }
+    });
+    
+    console.log('📤 Enviando mensaje a los jueces seleccionados:', juecesSeleccionadosData);
+    console.log('📊 Total de jueces seleccionados:', juecesSeleccionadosData.length);
+    console.log('📝 Datos del mensaje:', datos);
+    
+    // Simular envío exitoso y actualizar contador
+    setMensajesEnviados(prev => prev + juecesSeleccionadosData.length);
+    
+    // Limpiar selección después de enviar
+    setJuecesSeleccionados(new Set());
+  };
+
+  // Función para ordenar las filas (seleccionadas primero si está activado)
+  const obtenerFilasOrdenadas = useCallback(() => {
+    if (!ordenarSeleccionadosPrimero) {
+      return filasFiltradas;
+    }
+    
+    return [...filasFiltradas].sort((a, b) => {
+      const indexA = filasFiltradas.indexOf(a);
+      const indexB = filasFiltradas.indexOf(b);
+      
+      // Verificar si alguna fila tiene jueces seleccionados
+      const tieneJuecesSeleccionadosA = a.jueces_objetos?.some((_, juezIndex) => 
+        juecesSeleccionados.has(generarIdJuez(indexA, juezIndex))
+      ) || false;
+      
+      const tieneJuecesSeleccionadosB = b.jueces_objetos?.some((_, juezIndex) => 
+        juecesSeleccionados.has(generarIdJuez(indexB, juezIndex))
+      ) || false;
+      
+      if (tieneJuecesSeleccionadosA && !tieneJuecesSeleccionadosB) return -1;
+      if (!tieneJuecesSeleccionadosA && tieneJuecesSeleccionadosB) return 1;
+      return 0;
+    });
+  }, [filasFiltradas, juecesSeleccionados, ordenarSeleccionadosPrimero]);
+
+  // Función para obtener el índice original de una fila ordenada
+  const obtenerIndiceOriginal = useCallback((fila: FilaDto) => {
+    return filasFiltradas.indexOf(fila);
+  }, [filasFiltradas]);
+
+  const toggleOrdenarSeleccionados = () => {
+    setOrdenarSeleccionadosPrimero(!ordenarSeleccionadosPrimero);
+  };
+
+  // Contar solo los jueces seleccionados que tienen mensaje
+  const juecesSeleccionadosConMensaje = Array.from(juecesSeleccionados).length;
+
   return (
     <div className="flex flex-1 flex-col gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-6 min-h-0 h-full overflow-hidden">
       <div className="mb-2 sm:mb-3 lg:mb-6">
@@ -217,7 +343,7 @@ export default function EstadisticasPage() {
       </div>
 
       {/* Estadísticas Resumen */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-6 mb-2 sm:mb-3 lg:mb-6 flex-shrink-0">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-6 mb-2 sm:mb-3 lg:mb-6 flex-shrink-0">
         <div className="bg-white p-2 sm:p-3 lg:p-6 rounded-lg shadow">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -273,6 +399,20 @@ export default function EstadisticasPage() {
             </div>
           </div>
         </div>
+
+        <div className="bg-white p-2 sm:p-3 lg:p-6 rounded-lg shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 bg-green-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-xs sm:text-sm font-bold">📤</span>
+              </div>
+            </div>
+            <div className="ml-2 sm:ml-3 lg:ml-4">
+              <p className="text-xs sm:text-sm font-medium text-gray-500">Mensajes Enviados</p>
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{mensajesEnviados}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Tabla del Cuadro Anual */}
@@ -285,7 +425,7 @@ export default function EstadisticasPage() {
                 Mostrando {filasFiltradas.length} de {filas.length} filas para {mes}/{anio}
                 {filtroJuez && (
                   <span className="ml-2 text-blue-600">
-                    • Filtrado por: "{filtroJuez}"
+                    • Filtrado por: &quot;{filtroJuez}&quot;
                   </span>
                 )}
                 {cuadroAnual && (
@@ -295,7 +435,7 @@ export default function EstadisticasPage() {
                 )}
               </p>
             </div>
-            <div className="flex gap-2 min-w-0">
+            <div className="flex gap-2 min-w-0 flex-wrap">
               <div className="flex-1 sm:flex-none sm:w-64 min-w-0">
                 <Input
                   type="text"
@@ -315,6 +455,26 @@ export default function EstadisticasPage() {
                   ✕
                 </Button>
               )}
+              <Button 
+                onClick={seleccionarTodos}
+                variant="outline"
+                size="sm"
+                className="whitespace-nowrap"
+              >
+                Seleccionar Todos
+              </Button>
+              <Button 
+                onClick={deseleccionarTodos}
+                variant="outline"
+                size="sm"
+                className="whitespace-nowrap"
+              >
+                Deseleccionar
+              </Button>
+              <EnviarMensajeDialog
+                juecesSeleccionados={juecesSeleccionadosConMensaje}
+                onEnviarMensaje={handleEnviarMensaje}
+              />
             </div>
           </div>
         </div>
@@ -328,9 +488,12 @@ export default function EstadisticasPage() {
             <>
               {/* Vista de Cards para móviles */}
               <div className="block md:hidden space-y-4">
-                {filasFiltradas.map((fila, index) => (
-                  <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                {obtenerFilasOrdenadas().map((fila, index) => {
+                  const indexOriginal = obtenerIndiceOriginal(fila);
+                  return (
+                  <div key={index} className="rounded-lg p-4 border bg-gray-50 border-gray-200">
                     <div className="space-y-3">
+                      
                       {/* Instancia */}
                       <div>
                         <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">INSTANCIA</div>
@@ -343,30 +506,56 @@ export default function EstadisticasPage() {
                         <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">JUECES</div>
                         <div className="space-y-1">
                           {fila.jueces_objetos && fila.jueces_objetos.length > 0 ? (
-                            fila.jueces_objetos.map((juez, juezIndex) => (
-                              <div key={juezIndex} className="bg-white p-2 rounded border">
-                                <div className="font-medium text-gray-900 text-sm">
-                                  {juez.nombre_completo.toUpperCase()}
+                            fila.jueces_objetos.map((juez, juezIndex) => {
+                              const juezId = generarIdJuez(indexOriginal, juezIndex);
+                              const juezSeleccionado = juecesSeleccionados.has(juezId);
+                              const puedeSeleccionar = juezTieneMensaje(juez);
+                              
+                              return (
+                                <div key={juezIndex} className={`bg-white p-2 rounded border ${
+                                  juezSeleccionado ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                                }`}>
+                                  <div className="flex items-start gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={juezSeleccionado}
+                                      onChange={() => toggleSeleccionJuez(indexOriginal, juezIndex)}
+                                      disabled={!puedeSeleccionar}
+                                      className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1 ${
+                                        !puedeSeleccionar ? 'opacity-50 cursor-not-allowed' : ''
+                                      }`}
+                                    />
+                                    <div className="flex-1">
+                                      <div className="font-medium text-gray-900 text-sm">
+                                        {juez.nombre_completo.toUpperCase()}
+                                      </div>
+                                      <div className="text-xs text-gray-600 mt-1">
+                                        📞 {juez.telefono}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                          juez.l_mensaje ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                        }`}>
+                                          {juez.l_mensaje ? 'SÍ' : 'NO'}
+                                        </span>
+                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                          juez.sexo === 'MASCULINO' ? 'bg-blue-100 text-blue-800' : 
+                                          juez.sexo === 'FEMENINO' ? 'bg-pink-100 text-pink-800' : 
+                                          'bg-gray-100 text-gray-800'
+                                        }`}>
+                                          {juez.sexo.toUpperCase()}
+                                        </span>
+                                        {!puedeSeleccionar && (
+                                          <span className="text-xs text-gray-400">
+                                            (No seleccionable)
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
-                                <div className="text-xs text-gray-600 mt-1">
-                                  📞 {juez.telefono}
-                                </div>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                    juez.l_mensaje ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                  }`}>
-                                    {juez.l_mensaje ? 'SÍ' : 'NO'}
-                                  </span>
-                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                    juez.sexo === 'MASCULINO' ? 'bg-blue-100 text-blue-800' : 
-                                    juez.sexo === 'FEMENINO' ? 'bg-pink-100 text-pink-800' : 
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
-                                    {juez.sexo.toUpperCase()}
-                                  </span>
-                                </div>
-                              </div>
-                            ))
+                              );
+                            })
                           ) : (
                             <div className="text-sm text-gray-500">
                               {String(fila.jueces).toUpperCase()}
@@ -432,7 +621,8 @@ export default function EstadisticasPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Vista de tabla para tablets y desktop */}
@@ -440,6 +630,20 @@ export default function EstadisticasPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
+                      <th 
+                        className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                        onClick={toggleOrdenarSeleccionados}
+                        title={ordenarSeleccionadosPrimero ? "Mostrar orden normal" : "Mostrar seleccionados primero"}
+                      >
+                        <div className="flex items-center gap-1">
+                          SELECCIÓN
+                          {ordenarSeleccionadosPrimero ? (
+                            <span className="text-blue-600">↑</span>
+                          ) : (
+                            <span className="text-gray-400">↓</span>
+                          )}
+                        </div>
+                      </th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">INSTANCIA</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">JUECES</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NUMEROS</th>
@@ -455,8 +659,42 @@ export default function EstadisticasPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filasFiltradas.map((fila, index) => (
+                    {obtenerFilasOrdenadas().map((fila, index) => {
+                      const indexOriginal = obtenerIndiceOriginal(fila);
+                      return (
                       <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          <div className="space-y-1">
+                            {fila.jueces_objetos && fila.jueces_objetos.length > 0 ? (
+                              fila.jueces_objetos.map((juez, juezIndex) => {
+                                const juezId = generarIdJuez(indexOriginal, juezIndex);
+                                const juezSeleccionado = juecesSeleccionados.has(juezId);
+                                const puedeSeleccionar = juezTieneMensaje(juez);
+                                
+                                return (
+                                  <div key={juezIndex} className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={juezSeleccionado}
+                                      onChange={() => toggleSeleccionJuez(indexOriginal, juezIndex)}
+                                      disabled={!puedeSeleccionar}
+                                      className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ${
+                                        !puedeSeleccionar ? 'opacity-50 cursor-not-allowed' : ''
+                                      }`}
+                                    />
+                                    <span className={`text-xs ${
+                                      !puedeSeleccionar ? 'text-gray-400' : 'text-gray-700'
+                                    }`}>
+                                      {!puedeSeleccionar ? 'No disponible' : 'Seleccionar'}
+                                    </span>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div className="text-xs text-gray-400">-</div>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                           <div>
                             <div className="font-medium">{fila.instancia}</div>
@@ -564,7 +802,8 @@ export default function EstadisticasPage() {
                           {fila.niv_muy_bueno.toLocaleString()}
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -573,7 +812,7 @@ export default function EstadisticasPage() {
             <div className="text-center py-8">
               {filtroJuez ? (
                 <div>
-                  <p className="text-gray-500">No se encontraron jueces que coincidan con "{filtroJuez}"</p>
+                  <p className="text-gray-500">No se encontraron jueces que coincidan con &quot;{filtroJuez}&quot;</p>
                   <Button 
                     onClick={limpiarFiltroJuez}
                     variant="outline"

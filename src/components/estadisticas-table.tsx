@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { JuezConMetaResumen } from '@/lib/api/estadisticaJuecesApi';
 
 interface EstadisticasTableProps {
@@ -136,10 +137,12 @@ export function EstadisticasTable({ jueces, isLoading = false }: EstadisticasTab
               <td className="w-1/4 px-3 py-4">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 h-6 w-6 sm:h-8 sm:w-8">
-                    <img
+                    <Image
                       className="h-6 w-6 sm:h-8 sm:w-8 rounded-full"
                       src={juez.profile_image || '/default-avatar.png'}
                       alt={`${juez.x_nombres} ${juez.x_app_paterno}`}
+                      width={32}
+                      height={32}
                     />
                   </div>
                   <div className="ml-2 min-w-0 flex-1">

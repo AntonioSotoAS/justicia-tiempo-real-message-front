@@ -1,8 +1,6 @@
 "use client"
 
-import { SidebarIcon, LogOut, User } from "lucide-react"
-
-import { SearchForm } from "@/components/search-form"
+import { SidebarIcon } from "lucide-react"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,23 +12,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useSidebar } from "@/components/ui/sidebar"
-import { useAuth } from "@/hooks/use-auth"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
 export function SiteHeader() {
   const { toggleSidebar } = useSidebar()
-  const { user, logout } = useAuth()
-
-  const handleLogout = async () => {
-    await logout()
-  }
 
   return (
     <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b">
