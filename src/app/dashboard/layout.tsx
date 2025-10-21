@@ -13,12 +13,12 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthGuard requireAuth={true}>
-      <div className="[--header-height:calc(--spacing(14))]">
-        <SidebarProvider className="flex flex-col">
+      <div className="[--header-height:calc(--spacing(14))] h-screen overflow-hidden">
+        <SidebarProvider className="flex flex-col h-full">
           <SiteHeader />
-          <div className="flex flex-1">
+          <div className="flex flex-1 min-h-0 overflow-hidden">
             <AppSidebar />
-            <SidebarInset className="flex flex-col min-h-0">
+            <SidebarInset className="flex flex-col flex-1 min-h-0 overflow-hidden">
               <div className="flex-1 min-h-0 overflow-auto">
                 {children}
               </div>

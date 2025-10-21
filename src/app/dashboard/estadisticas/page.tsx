@@ -176,16 +176,16 @@ export default function EstadisticasPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-6 min-h-0 overflow-auto">
+    <div className="flex flex-1 flex-col gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-6 min-h-0 h-full overflow-hidden">
       <div className="mb-2 sm:mb-3 lg:mb-6">
         <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Estadísticas de Jueces</h1>
         <p className="text-xs sm:text-sm md:text-base text-gray-600 leading-relaxed">Análisis de rendimiento y metas de los jueces del sistema</p>
       </div>
 
       {/* Filtros */}
-      <div className="bg-white p-2 sm:p-3 lg:p-6 rounded-lg shadow mb-2 sm:mb-3 lg:mb-6">
+      <div className="bg-white p-2 sm:p-3 lg:p-6 rounded-lg shadow mb-2 sm:mb-3 lg:mb-6 flex-shrink-0">
         <h2 className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold mb-2 sm:mb-3 lg:mb-4">Filtros</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
           <div>
             <Label htmlFor="anio">Año</Label>
             <Input
@@ -208,30 +208,7 @@ export default function EstadisticasPage() {
               max="12"
             />
           </div>
-          <div>
-            <Label htmlFor="filtroJuez">Filtrar por Juez</Label>
-            <div className="flex gap-2">
-              <Input
-                id="filtroJuez"
-                type="text"
-                placeholder="Nombre del juez..."
-                value={filtroJuez}
-                onChange={handleFiltroJuezChange}
-                className="flex-1"
-              />
-              {filtroJuez && (
-                <Button 
-                  onClick={limpiarFiltroJuez}
-                  variant="outline"
-                  size="sm"
-                  className="px-3"
-                >
-                  ✕
-                </Button>
-              )}
-            </div>
-          </div>
-          <div className="flex items-end sm:col-span-2 lg:col-span-1">
+          <div className="flex items-end">
             <Button onClick={handleFiltrosChange} className="w-full">
               Actualizar Datos
             </Button>
@@ -240,7 +217,7 @@ export default function EstadisticasPage() {
       </div>
 
       {/* Estadísticas Resumen */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-6 mb-2 sm:mb-3 lg:mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-6 mb-2 sm:mb-3 lg:mb-6 flex-shrink-0">
         <div className="bg-white p-2 sm:p-3 lg:p-6 rounded-lg shadow">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -299,162 +276,299 @@ export default function EstadisticasPage() {
       </div>
 
       {/* Tabla del Cuadro Anual */}
-      <div className="bg-white rounded-lg shadow flex flex-col min-h-0">
+      <div className="bg-white rounded-lg shadow flex flex-col flex-1 min-h-0">
         <div className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 border-b border-gray-200 flex-shrink-0">
-          <h2 className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold">Cuadro Anual de Estadísticas</h2>
-          <p className="text-xs sm:text-sm text-gray-500">
-            Mostrando {filasFiltradas.length} de {filas.length} filas para {mes}/{anio}
-            {filtroJuez && (
-              <span className="ml-2 text-blue-600">
-                • Filtrado por: "{filtroJuez}"
-              </span>
-            )}
-            {cuadroAnual && (
-              <span className="ml-2">
-                • Fecha consulta: {new Date(cuadroAnual.fecha_consulta).toLocaleDateString()}
-              </span>
-            )}
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 min-w-0">
+            <div>
+              <h2 className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold">Cuadro Anual de Estadísticas</h2>
+              <p className="text-xs sm:text-sm text-gray-500">
+                Mostrando {filasFiltradas.length} de {filas.length} filas para {mes}/{anio}
+                {filtroJuez && (
+                  <span className="ml-2 text-blue-600">
+                    • Filtrado por: "{filtroJuez}"
+                  </span>
+                )}
+                {cuadroAnual && (
+                  <span className="ml-2">
+                    • Fecha consulta: {new Date(cuadroAnual.fecha_consulta).toLocaleDateString()}
+                  </span>
+                )}
+              </p>
+            </div>
+            <div className="flex gap-2 min-w-0">
+              <div className="flex-1 sm:flex-none sm:w-64 min-w-0">
+                <Input
+                  type="text"
+                  placeholder="Filtrar por juez..."
+                  value={filtroJuez}
+                  onChange={handleFiltroJuezChange}
+                  className="w-full min-w-0"
+                />
+              </div>
+              {filtroJuez && (
+                <Button 
+                  onClick={limpiarFiltroJuez}
+                  variant="outline"
+                  size="sm"
+                  className="px-3"
+                >
+                  ✕
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="p-1 sm:p-2 lg:p-6 flex-1 min-h-0 overflow-auto">
+        <div className="p-1 sm:p-2 lg:p-6 flex-1 min-h-0 overflow-auto min-w-0">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               <span className="ml-2 text-gray-600">Cargando cuadro anual...</span>
             </div>
           ) : filasFiltradas.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">INSTANCIA</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">JUECES</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NUMEROS</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MENSAJE</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SEXO</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RESOLUCIONES</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">INGRESOS</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">META PRELIMINAR</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AVANCE REAL</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIVEL</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIVEL BUENO</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIVEL MUY BUENO</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filasFiltradas.map((fila, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                        <div>
-                          <div className="font-medium">{fila.instancia}</div>
-                          <div className="text-xs text-gray-500">{fila.org_jurisd}</div>
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+            <>
+              {/* Vista de Cards para móviles */}
+              <div className="block md:hidden space-y-4">
+                {filasFiltradas.map((fila, index) => (
+                  <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="space-y-3">
+                      {/* Instancia */}
+                      <div>
+                        <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">INSTANCIA</div>
+                        <div className="font-medium text-gray-900">{fila.instancia}</div>
+                        <div className="text-xs text-gray-500">{fila.org_jurisd}</div>
+                      </div>
+
+                      {/* Jueces */}
+                      <div>
+                        <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">JUECES</div>
                         <div className="space-y-1">
                           {fila.jueces_objetos && fila.jueces_objetos.length > 0 ? (
                             fila.jueces_objetos.map((juez, juezIndex) => (
-                              <div key={juezIndex} className="text-xs">
-                                <div className="font-medium text-gray-900">
+                              <div key={juezIndex} className="bg-white p-2 rounded border">
+                                <div className="font-medium text-gray-900 text-sm">
                                   {juez.nombre_completo.toUpperCase()}
+                                </div>
+                                <div className="text-xs text-gray-600 mt-1">
+                                  📞 {juez.telefono}
+                                </div>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                    juez.l_mensaje ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                  }`}>
+                                    {juez.l_mensaje ? 'SÍ' : 'NO'}
+                                  </span>
+                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                    juez.sexo === 'MASCULINO' ? 'bg-blue-100 text-blue-800' : 
+                                    juez.sexo === 'FEMENINO' ? 'bg-pink-100 text-pink-800' : 
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {juez.sexo.toUpperCase()}
+                                  </span>
                                 </div>
                               </div>
                             ))
                           ) : (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-sm text-gray-500">
                               {String(fila.jueces).toUpperCase()}
                             </div>
                           )}
                         </div>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                        <div className="space-y-1">
-                          {fila.jueces_objetos && fila.jueces_objetos.length > 0 ? (
-                            fila.jueces_objetos.map((juez, juezIndex) => (
-                              <div key={juezIndex} className="text-xs text-gray-600">
-                                {juez.telefono}
-                              </div>
-                            ))
-                          ) : (
-                            <div className="text-xs text-gray-400">-</div>
-                          )}
+                      </div>
+
+                      {/* Métricas principales */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white p-3 rounded border">
+                          <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">RESOLUCIONES</div>
+                          <div className="text-lg font-semibold text-green-600">{fila.res_total.toLocaleString()}</div>
                         </div>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                        <div className="space-y-1">
-                          {fila.jueces_objetos && fila.jueces_objetos.length > 0 ? (
-                            fila.jueces_objetos.map((juez, juezIndex) => (
-                              <div key={juezIndex} className="text-xs">
-                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                  juez.l_mensaje ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                }`}>
-                                  {juez.l_mensaje ? 'SÍ' : 'NO'}
-                                </span>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="text-xs text-gray-400">-</div>
-                          )}
+                        <div className="bg-white p-3 rounded border">
+                          <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">INGRESOS</div>
+                          <div className="text-lg font-semibold text-blue-600">{fila.ing_total.toLocaleString()}</div>
                         </div>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                        <div className="space-y-1">
-                          {fila.jueces_objetos && fila.jueces_objetos.length > 0 ? (
-                            fila.jueces_objetos.map((juez, juezIndex) => (
-                              <div key={juezIndex} className="text-xs">
-                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                  juez.sexo === 'MASCULINO' ? 'bg-blue-100 text-blue-800' : 
-                                  juez.sexo === 'FEMENINO' ? 'bg-pink-100 text-pink-800' : 
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {juez.sexo.toUpperCase()}
-                                </span>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="text-xs text-gray-400">-</div>
-                          )}
+                      </div>
+
+                      {/* Avance y nivel */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white p-3 rounded border">
+                          <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">AVANCE REAL</div>
+                          <div className={`text-lg font-semibold ${
+                            fila.pct_real_avance >= 100 ? 'text-green-600' : 
+                            fila.pct_real_avance >= 80 ? 'text-yellow-600' : 
+                            'text-red-600'
+                          }`}>
+                            {fila.pct_real_avance.toFixed(1)}%
+                          </div>
                         </div>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-green-600">
-                        {fila.res_total.toLocaleString()}
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-blue-600">
-                        {fila.ing_total.toLocaleString()}
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                        {fila.meta_preliminar.toLocaleString()}
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm">
-                        <span className={`font-medium ${
-                          fila.pct_real_avance >= 100 ? 'text-green-600' : 
-                          fila.pct_real_avance >= 80 ? 'text-yellow-600' : 
-                          'text-red-600'
-                        }`}>
-                          {fila.pct_real_avance.toFixed(1)}%
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          fila.nivel_prod === 'MUY BUENO' ? 'bg-green-100 text-green-800' :
-                          fila.nivel_prod === 'BUENO' ? 'bg-blue-100 text-blue-800' :
-                          fila.nivel_prod === 'REGULAR' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {fila.nivel_prod}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                        {fila.niv_bueno.toLocaleString()}
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                        {fila.niv_muy_bueno.toLocaleString()}
-                      </td>
+                        <div className="bg-white p-3 rounded border">
+                          <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">NIVEL</div>
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            fila.nivel_prod === 'MUY BUENO' ? 'bg-green-100 text-green-800' :
+                            fila.nivel_prod === 'BUENO' ? 'bg-blue-100 text-blue-800' :
+                            fila.nivel_prod === 'REGULAR' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {fila.nivel_prod}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Metas */}
+                      <div className="bg-white p-3 rounded border">
+                        <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">METAS</div>
+                        <div className="grid grid-cols-3 gap-2 text-xs">
+                          <div>
+                            <div className="text-gray-500">Preliminar</div>
+                            <div className="font-medium">{fila.meta_preliminar.toLocaleString()}</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500">Bueno</div>
+                            <div className="font-medium">{fila.niv_bueno.toLocaleString()}</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500">Muy Bueno</div>
+                            <div className="font-medium">{fila.niv_muy_bueno.toLocaleString()}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Vista de tabla para tablets y desktop */}
+              <div className="hidden md:block overflow-x-auto min-w-0">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">INSTANCIA</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">JUECES</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NUMEROS</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MENSAJE</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SEXO</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RESOLUCIONES</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">INGRESOS</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">META PRELIMINAR</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AVANCE REAL</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIVEL</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIVEL BUENO</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIVEL MUY BUENO</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filasFiltradas.map((fila, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          <div>
+                            <div className="font-medium">{fila.instancia}</div>
+                            <div className="text-xs text-gray-500">{fila.org_jurisd}</div>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          <div className="space-y-1">
+                            {fila.jueces_objetos && fila.jueces_objetos.length > 0 ? (
+                              fila.jueces_objetos.map((juez, juezIndex) => (
+                                <div key={juezIndex} className="text-xs">
+                                  <div className="font-medium text-gray-900">
+                                    {juez.nombre_completo.toUpperCase()}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-xs text-gray-500">
+                                {String(fila.jueces).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          <div className="space-y-1">
+                            {fila.jueces_objetos && fila.jueces_objetos.length > 0 ? (
+                              fila.jueces_objetos.map((juez, juezIndex) => (
+                                <div key={juezIndex} className="text-xs text-gray-600">
+                                  {juez.telefono}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-xs text-gray-400">-</div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          <div className="space-y-1">
+                            {fila.jueces_objetos && fila.jueces_objetos.length > 0 ? (
+                              fila.jueces_objetos.map((juez, juezIndex) => (
+                                <div key={juezIndex} className="text-xs">
+                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                    juez.l_mensaje ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                  }`}>
+                                    {juez.l_mensaje ? 'SÍ' : 'NO'}
+                                  </span>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-xs text-gray-400">-</div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          <div className="space-y-1">
+                            {fila.jueces_objetos && fila.jueces_objetos.length > 0 ? (
+                              fila.jueces_objetos.map((juez, juezIndex) => (
+                                <div key={juezIndex} className="text-xs">
+                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                    juez.sexo === 'MASCULINO' ? 'bg-blue-100 text-blue-800' : 
+                                    juez.sexo === 'FEMENINO' ? 'bg-pink-100 text-pink-800' : 
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {juez.sexo.toUpperCase()}
+                                  </span>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-xs text-gray-400">-</div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-green-600">
+                          {fila.res_total.toLocaleString()}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-blue-600">
+                          {fila.ing_total.toLocaleString()}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {fila.meta_preliminar.toLocaleString()}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm">
+                          <span className={`font-medium ${
+                            fila.pct_real_avance >= 100 ? 'text-green-600' : 
+                            fila.pct_real_avance >= 80 ? 'text-yellow-600' : 
+                            'text-red-600'
+                          }`}>
+                            {fila.pct_real_avance.toFixed(1)}%
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            fila.nivel_prod === 'MUY BUENO' ? 'bg-green-100 text-green-800' :
+                            fila.nivel_prod === 'BUENO' ? 'bg-blue-100 text-blue-800' :
+                            fila.nivel_prod === 'REGULAR' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {fila.nivel_prod}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {fila.niv_bueno.toLocaleString()}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                          {fila.niv_muy_bueno.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           ) : (
             <div className="text-center py-8">
               {filtroJuez ? (

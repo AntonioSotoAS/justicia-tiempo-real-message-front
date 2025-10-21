@@ -46,12 +46,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
     ],
     navSecondary: [
-      {
-        title: "Cerrar Sesión",
-        url: "#",
-        icon: LogOut,
-        onClick: logout,
-      },
+      //{
+      //  title: "Cerrar Sesión",
+      //  url: "#",
+      //  icon: LogOut,
+      //  onClick: logout,
+      //},
     ],
     projects: [],
   };
