@@ -41,6 +41,57 @@ export interface FiltrosJueces {
   activo?: boolean;
 }
 
+// DTOs para Cuadro Anual
+export interface JuezObjetoDto {
+  nombre_completo: string;
+  telefono: string;
+  l_mensaje: boolean;
+  sexo: string;
+}
+
+export interface ResCellDto {
+  val: number;
+  cls: string;
+  nivel: string;
+}
+
+export interface IngCellDto {
+  val: number;
+  cls: string;
+  nivel: string;
+}
+
+export interface FilaDto {
+  org_jurisd: string;
+  instancia: string;
+  jueces: string;
+  jueces_objetos: JuezObjetoDto[];
+  estandar: number;
+  meta_preliminar: number;
+  carga_inicial: number;
+  pct_real_avance: number;
+  pct_ideal_avance: number;
+  nivel_prod: string;
+  niv_bueno: number;
+  niv_muy_bueno: number;
+  res_cells: ResCellDto[];
+  ing_cells: IngCellDto[];
+  res_total: number;
+  ing_total: number;
+  modulo_id: number;
+  modulo_nom: string;
+  n_orden: number;
+}
+
+export interface CuadroAnualDto {
+  anio: number;
+  mes_actual: number;
+  meses: string[];
+  filas: FilaDto[];
+  total_filas: number;
+  fecha_consulta: string;
+}
+
 // Clase para manejar las operaciones de estadísticas de jueces
 class EstadisticaJuecesApi {
   private readonly baseUrl = '/jueces';
@@ -169,6 +220,72 @@ class EstadisticaJuecesApi {
       success: true,
       data: estadisticasCalculadas
     };
+  }
+
+  /**
+   * Obtener cuadro anual de estadísticas
+   */
+  async getCuadroAnual(anio?: number, mes?: number): Promise<ApiResponse<CuadroAnualDto>> {
+    console.log(`📊 EstadisticaJuecesApi: Obteniendo cuadro anual para ${anio || 'actual'}/${mes || 'actual'}`);
+    
+    let url = '/estadistica/cuadro-anual';
+    const params = new URLSearchParams();
+    
+    if (anio) params.append('year', anio.toString());
+    if (mes) params.append('month', mes.toString());
+    
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+    
+    console.log(`🌐 EstadisticaJuecesApi: URL completa: http://localhost:5002${url}`);
+    
+    const response = await baseApi.get<CuadroAnualDto>(url);
+    
+    console.log(`📡 EstadisticaJuecesApi: Cuadro anual recibido:`, {
+      success: response.success,
+      anio: response.data?.anio,
+      totalFilas: response.data?.total_filas || 0,
+      fechaConsulta: response.data?.fecha_consulta
+    });
+    
+    return response;
+  }
+
+  /**
+   * Obtener cuadro anual actual
+   */
+  async getCuadroAnualActual(): Promise<ApiResponse<CuadroAnualDto>> {
+    console.log(`📊 EstadisticaJuecesApi: Obteniendo cuadro anual actual`);
+    console.log(`🌐 EstadisticaJuecesApi: URL completa: http://localhost:5002/estadistica/cuadro-anual/actual`);
+    
+    const response = await baseApi.get<CuadroAnualDto>('/estadistica/cuadro-anual/actual');
+    
+    console.log(`📡 EstadisticaJuecesApi: Cuadro anual actual recibido:`, {
+      success: response.success,
+      anio: response.data?.anio,
+      totalFilas: response.data?.total_filas || 0
+    });
+    
+    return response;
+  }
+
+  /**
+   * Obtener cuadro anual por año específico
+   */
+  async getCuadroAnualByYear(anio: number): Promise<ApiResponse<CuadroAnualDto>> {
+    console.log(`📊 EstadisticaJuecesApi: Obteniendo cuadro anual para año ${anio}`);
+    console.log(`🌐 EstadisticaJuecesApi: URL completa: http://localhost:5002/estadistica/cuadro-anual/${anio}`);
+    
+    const response = await baseApi.get<CuadroAnualDto>(`/estadistica/cuadro-anual/${anio}`);
+    
+    console.log(`📡 EstadisticaJuecesApi: Cuadro anual ${anio} recibido:`, {
+      success: response.success,
+      anio: response.data?.anio,
+      totalFilas: response.data?.total_filas || 0
+    });
+    
+    return response;
   }
 }
 
