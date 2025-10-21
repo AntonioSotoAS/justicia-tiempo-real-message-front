@@ -34,8 +34,8 @@ export function EnviarMensajeDialog({
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     encuesta: '',
-    telefono: '',
-    whatsapp: '',
+    telefono: '(01) 410-1010 anexo 2245',
+    whatsapp: '943 189 536',
     fecha: undefined as Date | undefined,
     hora: ''
   });
@@ -47,8 +47,8 @@ export function EnviarMensajeDialog({
     // Limpiar formulario después de enviar
     setFormData({
       encuesta: '',
-      telefono: '',
-      whatsapp: '',
+      telefono: '(01) 410-1010 anexo 2245',
+      whatsapp: '943 189 536',
       fecha: undefined,
       hora: ''
     });
