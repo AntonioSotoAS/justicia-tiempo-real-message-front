@@ -20,13 +20,15 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-      <div className="bg-muted relative hidden lg:block">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center">
-          <div className="text-center text-white p-8">
-            <h2 className="text-3xl font-bold mb-4">Sistema de Justicia</h2>
-            <p className="text-lg opacity-90">
-              Plataforma de gestión judicial en tiempo real
-            </p>
+      <div className="bg-gray-50 relative hidden lg:block">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center p-8">
+            <img 
+              src="/logo-derecha.png" 
+              alt="Logo Sistema de Justicia" 
+              className="mx-auto max-w-lg w-full h-auto"
+              style={{ maxHeight: '80vh' }}
+            />
           </div>
         </div>
       </div>

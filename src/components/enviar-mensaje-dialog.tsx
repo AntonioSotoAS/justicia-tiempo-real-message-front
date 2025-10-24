@@ -57,10 +57,11 @@ export function EnviarMensajeDialog({
       fechaCorte: formData.fechaCorte ? formData.fechaCorte.toISOString() : undefined
     };
     
-    console.log('📤 ===== DATOS DEL MENSAJE ENVIADOS =====');
-    console.log('📋 Datos formateados:', datosFormateados);
+    console.log('📤 ===== ENVIAR MENSAJE - DATOS DEL FORMULARIO =====');
+    console.log('📋 Datos formateados que se envían:', datosFormateados);
     console.log('📋 Datos originales del formulario:', formData);
-    console.log('📤 ===== FIN DE DATOS DEL MENSAJE =====');
+    console.log('👥 Número de jueces seleccionados:', juecesSeleccionados);
+    console.log('📤 ===== FIN ENVIAR MENSAJE =====');
     
     onEnviarMensaje(datosFormateados);
     setOpen(false);
@@ -137,6 +138,7 @@ export function EnviarMensajeDialog({
               onChange={(e) => handleInputChange('whatsapp', e.target.value)}
             />
           </div>
+
 
           <div className="space-y-2">
             <Label htmlFor="fechaCorte">Fecha de corte</Label>

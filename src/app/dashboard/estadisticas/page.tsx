@@ -313,6 +313,8 @@ export default function EstadisticasPage() {
       fechaEnvio: datos.fechaEnvio,
       horaEnvio: datos.horaEnvio,
       fechaCorte: datos.fechaCorte,
+      // Resoluciones se toman automáticamente de la tabla (res_total de cada fila)
+      resoluciones: item.fila.res_total.toString(),
       // Campos de jueces (específicos de cada juez)
       instancia: item.fila.instancia,
       modulo_nom: item.fila.modulo_nom,
