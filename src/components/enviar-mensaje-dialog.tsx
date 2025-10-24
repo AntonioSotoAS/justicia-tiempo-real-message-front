@@ -19,11 +19,13 @@ import {
 interface EnviarMensajeDialogProps {
   juecesSeleccionados: number;
   onEnviarMensaje: (datos: {
-    encuesta: string;
-    telefono: string;
-    whatsapp: string;
-    fecha: Date | undefined;
-    hora: string;
+    // Campos del mensaje (fijos)
+    encuesta?: string;
+    telefono?: string;
+    whatsapp?: string;
+    fechaEnvio?: string;
+    horaEnvio?: string;
+    fechaCorte?: string;
   }) => void;
 }
 
@@ -33,24 +35,43 @@ export function EnviarMensajeDialog({
 }: EnviarMensajeDialogProps) {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
+    // Campos del mensaje (fijos)
     encuesta: '',
     telefono: '(01) 410-1010 anexo 2245',
     whatsapp: '943 189 536',
-    fecha: undefined as Date | undefined,
-    hora: ''
+    fechaEnvio: undefined as Date | undefined,
+    horaEnvio: '',
+    fechaCorte: new Date() as Date | undefined
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onEnviarMensaje(formData);
+    
+    // Formatear datos del mensaje (los datos de jueces vienen de la selección)
+    const datosFormateados = {
+      encuesta: formData.encuesta || undefined,
+      telefono: formData.telefono || undefined,
+      whatsapp: formData.whatsapp || undefined,
+      fechaEnvio: formData.fechaEnvio ? formData.fechaEnvio.toISOString() : undefined,
+      horaEnvio: formData.horaEnvio || undefined,
+      fechaCorte: formData.fechaCorte ? formData.fechaCorte.toISOString() : undefined
+    };
+    
+    console.log('📤 ===== DATOS DEL MENSAJE ENVIADOS =====');
+    console.log('📋 Datos formateados:', datosFormateados);
+    console.log('📋 Datos originales del formulario:', formData);
+    console.log('📤 ===== FIN DE DATOS DEL MENSAJE =====');
+    
+    onEnviarMensaje(datosFormateados);
     setOpen(false);
     // Limpiar formulario después de enviar
     setFormData({
       encuesta: '',
       telefono: '(01) 410-1010 anexo 2245',
       whatsapp: '943 189 536',
-      fecha: undefined,
-      hora: ''
+      fechaEnvio: undefined,
+      horaEnvio: '',
+      fechaCorte: new Date()
     });
   };
 
@@ -72,7 +93,7 @@ export function EnviarMensajeDialog({
           Enviar Mensaje ({juecesSeleccionados})
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Enviar Mensaje a Magistrados(a)s</DialogTitle>
           <DialogDescription>
@@ -117,28 +138,36 @@ export function EnviarMensajeDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="fecha">Fecha</Label>
-              <DatePicker
-                value={formData.fecha}
-                onChange={(date) => handleInputChange('fecha', date)}
-                placeholder="Seleccionar fecha"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="hora">Hora</Label>
-              <TimePicker
-                value={formData.hora}
-                onChange={(time) => handleInputChange('hora', time)}
-                placeholder="Seleccionar hora"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="fechaCorte">Fecha de corte</Label>
+            <DatePicker
+              value={formData.fechaCorte}
+              onChange={(date) => handleInputChange('fechaCorte', date)}
+              placeholder="Seleccionar fecha de corte"
+            />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="fechaEnvio">Fecha de envío</Label>
+            <DatePicker
+              value={formData.fechaEnvio}
+              onChange={(date) => handleInputChange('fechaEnvio', date)}
+              placeholder="Seleccionar fecha de envío"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="horaEnvio">Hora de envío</Label>
+            <TimePicker
+              value={formData.horaEnvio}
+              onChange={(time) => handleInputChange('horaEnvio', time)}
+              placeholder="Seleccionar hora de envío"
+            />
+          </div>
+
+
           {/* Previsualización del mensaje */}
-          {(formData.encuesta || formData.telefono || formData.whatsapp || formData.fecha || formData.hora) && (
+          {(formData.encuesta || formData.telefono || formData.whatsapp || formData.fechaEnvio || formData.horaEnvio || formData.fechaCorte) && (
             <div className="space-y-2">
               <Label>Previsualización del mensaje</Label>
               <div className="p-4 bg-gray-50 rounded-lg border">
@@ -161,9 +190,9 @@ export function EnviarMensajeDialog({
                       <strong>💬 WhatsApp:</strong> {formData.whatsapp}
                     </div>
                   )}
-                  {formData.fecha && (
+                  {formData.fechaCorte && (
                     <div>
-                      <strong>📅 Fecha:</strong> {formData.fecha.toLocaleDateString('es-ES', {
+                      <strong>📅 Fecha de corte:</strong> {formData.fechaCorte.toLocaleDateString('es-ES', {
                         weekday: 'long',
                         year: 'numeric',
                         month: 'long',
@@ -171,11 +200,24 @@ export function EnviarMensajeDialog({
                       })}
                     </div>
                   )}
-                  {formData.hora && (
+                  {formData.fechaEnvio && (
                     <div>
-                      <strong>🕐 Hora:</strong> {formData.hora}
+                      <strong>📅 Fecha de envío:</strong> {formData.fechaEnvio.toLocaleDateString('es-ES', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
                     </div>
                   )}
+                  {formData.horaEnvio && (
+                    <div>
+                      <strong>🕐 Hora de envío:</strong> {formData.horaEnvio}
+                    </div>
+                  )}
+                </div>
+                <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-700">
+                  <strong>ℹ️ Nota:</strong> Los datos de los jueces (avance, nombre, etc.) se obtendrán automáticamente de la selección realizada.
                 </div>
               </div>
             </div>

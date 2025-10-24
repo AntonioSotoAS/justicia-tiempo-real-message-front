@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { estadisticaJuecesApi, CuadroAnualDto, FilaDto } from '@/lib/api/estadisticaJuecesApi';
+import { solicitudesApi } from '@/lib/api/solicitudesApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EnviarMensajeDialog } from '@/components/enviar-mensaje-dialog';
+import toast from 'react-hot-toast';
 
 export default function EstadisticasPage() {
   const [cuadroAnual, setCuadroAnual] = useState<CuadroAnualDto | null>(null);
@@ -230,10 +232,13 @@ export default function EstadisticasPage() {
     setJuecesSeleccionados(new Set());
   };
 
-  const handleEnviarMensaje = (datos: {
-    encuesta: string;
-    telefono: string;
-    whatsapp: string;
+  const handleEnviarMensaje = async (datos: {
+    encuesta?: string;
+    telefono?: string;
+    whatsapp?: string;
+    fechaEnvio?: string;
+    horaEnvio?: string;
+    fechaCorte?: string;
   }) => {
     const juecesSeleccionadosData: any[] = [];
     
@@ -253,14 +258,121 @@ export default function EstadisticasPage() {
       }
     });
     
-    console.log('📤 Enviando mensaje a los jueces seleccionados:', juecesSeleccionadosData);
-    console.log('📊 Total de jueces seleccionados:', juecesSeleccionadosData.length);
-    console.log('📝 Datos del mensaje:', datos);
+    // Crear el JSON completo para envío
+    const jsonEnvio = {
+      mensaje: {
+        encuesta: datos.encuesta,
+        telefono: datos.telefono,
+        whatsapp: datos.whatsapp,
+        fechaEnvio: datos.fechaEnvio,
+        horaEnvio: datos.horaEnvio,
+        fechaCorte: datos.fechaCorte
+      },
+      jueces: juecesSeleccionadosData.map((item, index) => ({
+        id: index + 1,
+        fila: {
+          org_jurisd: item.fila.org_jurisd,
+          instancia: item.fila.instancia,
+          modulo_nom: item.fila.modulo_nom,
+          estandar: item.fila.estandar,
+          meta_preliminar: item.fila.meta_preliminar,
+          nivel_prod: item.fila.nivel_prod,
+          carga_inicial: item.fila.carga_inicial,
+          pct_real_avance: item.fila.pct_real_avance,
+          pct_ideal_avance: item.fila.pct_ideal_avance,
+          niv_bueno: item.fila.niv_bueno,
+          niv_muy_bueno: item.fila.niv_muy_bueno,
+          res_total: item.fila.res_total,
+          ing_total: item.fila.ing_total
+        },
+        juez: {
+          nombre_completo: item.juez.nombre_completo,
+          telefono: item.juez.telefono,
+          l_mensaje: item.juez.l_mensaje,
+          sexo: item.juez.sexo
+        },
+        posicion: {
+          filaIndex: item.filaIndex,
+          juezIndex: item.juezIndex
+        }
+      })),
+      metadata: {
+        totalJueces: juecesSeleccionadosData.length,
+        timestamp: new Date().toISOString(),
+        version: "1.0"
+      }
+    };
+
     
-    // Simular envío exitoso y actualizar contador
-    setMensajesEnviados(prev => prev + juecesSeleccionadosData.length);
+    // Crear array de DTOs - un DTO por cada juez seleccionado
+    const arrayDtos = juecesSeleccionadosData.map((item, index) => ({
+      // Campos del mensaje (fijos para todos)
+      encuesta: datos.encuesta,
+      telefono: datos.telefono,
+      whatsapp: datos.whatsapp,
+      fechaEnvio: datos.fechaEnvio,
+      horaEnvio: datos.horaEnvio,
+      fechaCorte: datos.fechaCorte,
+      // Campos de jueces (específicos de cada juez)
+      instancia: item.fila.instancia,
+      modulo_nom: item.fila.modulo_nom,
+      meta_preliminar: item.fila.meta_preliminar,
+      nivel_prod: item.fila.nivel_prod,
+      pct_real_avance: item.fila.pct_real_avance,
+      niv_bueno: item.fila.niv_bueno,
+      niv_muy_bueno: item.fila.niv_muy_bueno,
+      // Campos del juez (específicos de cada juez)
+      nombre_completo: item.juez.nombre_completo,
+      telefono_juez: item.juez.telefono,
+      l_mensaje: item.juez.l_mensaje,
+      sexo: item.juez.sexo,
+      estado: 'PENDIENTE', // Valor por defecto
+      prioridad: 'MEDIA' // Valor por defecto
+    }));
+
+    console.log('📤 ===== ENVIANDO SOLICITUDES AL BACKEND =====');
+    console.log('📦 Array de DTOs:', arrayDtos);
     
-    // Limpiar selección después de enviar
+    // Enviar las solicitudes al backend
+    try {
+      const resultado = await solicitudesApi.createMultipleSolicitudes(arrayDtos);
+      
+      if (resultado.success) {
+        console.log('✅ Solicitudes enviadas exitosamente:', resultado);
+        setMensajesEnviados(prev => prev + resultado.totalExitosos);
+        
+        // Mostrar toast de éxito
+        toast.success(`✅ Se enviaron ${resultado.totalExitosos} de ${resultado.totalEnviados} solicitudes exitosamente`, {
+          duration: 4000,
+          style: {
+            background: '#10b981',
+            color: '#fff',
+            fontWeight: '500'
+          }
+        });
+      } else {
+        console.error('❌ Error al enviar solicitudes:', resultado);
+        toast.error(`❌ Error al enviar solicitudes. ${resultado.totalFallidos} solicitudes fallaron.`, {
+          duration: 5000,
+          style: {
+            background: '#ef4444',
+            color: '#fff',
+            fontWeight: '500'
+          }
+        });
+      }
+    } catch (error) {
+      console.error('🚨 Error general al enviar solicitudes:', error);
+      toast.error('❌ Error inesperado al enviar solicitudes', {
+        duration: 5000,
+        style: {
+          background: '#ef4444',
+          color: '#fff',
+          fontWeight: '500'
+        }
+      });
+    }
+    
     setJuecesSeleccionados(new Set());
   };
 
@@ -302,7 +414,7 @@ export default function EstadisticasPage() {
   const juecesSeleccionadosConMensaje = Array.from(juecesSeleccionados).length;
 
   return (
-    <div className="flex flex-1 flex-col gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-6 min-h-0 h-full overflow-hidden">
+    <div className="flex flex-1 flex-col gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-6 min-h-0">
       <div className="mb-2 sm:mb-3 lg:mb-6">
         <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Estadísticas de Jueces</h1>
         <p className="text-xs sm:text-sm md:text-base text-gray-600 leading-relaxed">Análisis de rendimiento y metas de los jueces del sistema</p>
@@ -342,81 +454,9 @@ export default function EstadisticasPage() {
         </div>
       </div>
 
-      {/* Estadísticas Resumen */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-6 mb-2 sm:mb-3 lg:mb-6 flex-shrink-0">
-        <div className="bg-white p-2 sm:p-3 lg:p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs sm:text-sm font-bold">F</span>
-              </div>
-            </div>
-            <div className="ml-2 sm:ml-3 lg:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-500">Total Filas</p>
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{estadisticas.totalFilas}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-2 sm:p-3 lg:p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 bg-green-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs sm:text-sm font-bold">R</span>
-              </div>
-            </div>
-            <div className="ml-2 sm:ml-3 lg:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-500">Resoluciones</p>
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{estadisticas.totalResoluciones}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-2 sm:p-3 lg:p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs sm:text-sm font-bold">%</span>
-              </div>
-            </div>
-            <div className="ml-2 sm:ml-3 lg:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-500">Promedio Avance</p>
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{estadisticas.promedioAvance}%</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-2 sm:p-3 lg:p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs sm:text-sm font-bold">★</span>
-              </div>
-            </div>
-            <div className="ml-2 sm:ml-3 lg:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-500">Muy Bueno</p>
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{estadisticas.filasMuyBueno}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-2 sm:p-3 lg:p-6 rounded-lg shadow">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 bg-green-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs sm:text-sm font-bold">📤</span>
-              </div>
-            </div>
-            <div className="ml-2 sm:ml-3 lg:ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-500">Mensajes Enviados</p>
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900">{mensajesEnviados}</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Tabla del Cuadro Anual */}
-      <div className="bg-white rounded-lg shadow flex flex-col flex-1 min-h-0">
+      <div className="bg-white rounded-lg shadow">
         <div className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 min-w-0">
             <div>
@@ -478,7 +518,7 @@ export default function EstadisticasPage() {
             </div>
           </div>
         </div>
-        <div className="p-1 sm:p-2 lg:p-6 flex-1 min-h-0 overflow-auto min-w-0">
+        <div className="p-1 sm:p-2 lg:p-6">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
